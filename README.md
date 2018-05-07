@@ -1,2 +1,2 @@
-# named-entity-recognition
+# Named Entity Recognition
 Named Entity Recognition Methods
