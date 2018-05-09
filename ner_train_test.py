@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[10]:
+# In[1]:
 
 
 import logging
@@ -16,19 +16,21 @@ from tqdm import tqdm_notebook as tqdm
 import utils
 import model.net as net
 from model.data_loader import DataLoader
-from evaluate import evaluate
+from evaluate import evaluate, f_score_simple
 
 
-# In[11]:
+# In[2]:
 
 
+# data_dir = 'data/coNLL/eng/'
+# model_dir = 'experiments/coNLL/base_model/'
 data_dir = 'data/kaggle/'
-model_dir = 'experiments/base_model/'
+model_dir = 'experiments/kaggle/base_model/'
 json_path = os.path.join(model_dir, 'params.json')
 params = utils.Params(json_path)
 
 
-# In[12]:
+# In[3]:
 
 
 # use GPU if available
@@ -36,83 +38,63 @@ params.cuda = torch.cuda.is_available()
 params.dict
 
 
-# In[13]:
+# In[4]:
 
 
 # load data
 data_loader = DataLoader(data_dir, params)
-data = data_loader.load_data(['train', 'val'], data_dir)
+data = data_loader.load_data(['train', 'val', 'test'])
 train_data = data['train']
 val_data = data['val']
+test_data = data['test']
+
+# specify the train and val dataset sizes
+params.train_size = train_data['size']
+params.val_size = val_data['size']
+params.test_size = test_data['size']
+
+params.pad_tag_ind = data_loader.tag_map[params.pad_tag]
 
 
-# In[26]:
-
-
-len(train_data['data'])
-
-
-# In[19]:
+# In[5]:
 
 
 data_loader.dataset_params.dict
 
 
-# In[20]:
-
-
-data_loader.unk_ind
-
-
-# In[21]:
+# In[6]:
 
 
 # specify the train and val dataset sizes
 params.train_size = train_data['size']
 params.val_size = val_data['size']
+params.pad_tag_ind = data_loader.tag_map[params.pad_tag]
 
 
-# In[22]:
+# In[7]:
 
 
 # Define the model and optimizer
 model = net.Net(params).cuda()
 
 
-# In[ ]:
+# In[8]:
 
 
 optimizer = optim.Adam(model.parameters(), lr=params.learning_rate)
-
-
-# In[ ]:
-
-
 # fetch loss function and metrics
 loss_fn = net.loss_fn
 metrics = net.metrics
 
 
-# In[ ]:
+# In[9]:
 
 
 # Set the logger
 utils.set_logger(os.path.join(model_dir, 'train.log'))
 
 
-# In[ ]:
-
-
-params.pad_tag_ind = data_loader.tag_map[params.pad_tag]
-
-
-# In[ ]:
-
-
-params.pad_tag_ind
-
-
-# In[ ]:
+# In[10]:
 
 
 def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps):
@@ -176,7 +158,7 @@ def train(model, optimizer, loss_fn, data_iterator, metrics, params, num_steps):
     logging.info("- Train metrics: " + metrics_string)
 
 
-# In[ ]:
+# In[11]:
 
 
 best_val_acc = 0.0
@@ -193,7 +175,7 @@ for epoch in range(params.num_epochs):
     # Evaluate for one epoch on validation set
     num_steps = (params.val_size + 1) // params.batch_size
     val_data_iterator = data_loader.data_iterator(val_data, params, shuffle=False)
-    val_metrics = evaluate(model, loss_fn, val_data_iterator, metrics, params, num_steps)
+    val_metrics = evaluate(model, loss_fn, val_data, metrics, data_loader, params, num_steps)
 
     val_acc = val_metrics['accuracy']
     is_best = val_acc >= best_val_acc
@@ -219,28 +201,16 @@ for epoch in range(params.num_epochs):
     utils.save_dict_to_json(val_metrics, last_json_path)
 
 
+# In[12]:
+
+
+num_steps = (params.val_size + 1) // params.batch_size
+f_score_simple(model, val_data, data_loader, params, num_steps)
+
+
 # ## Evaluate
 
-# In[16]:
-
-
-# load data
-data_loader = DataLoader(data_dir, params)
-data = data_loader.load_data(['test'], data_dir)
-test_data = data['test']
-
-
-# In[22]:
-
-
-# specify the test set size
-params.test_size = test_data['size']
-test_data_iterator = data_loader.data_iterator(test_data, params)
-
-logging.info("- done.")
-
-
-# In[23]:
+# In[14]:
 
 
 # Define the model
@@ -256,11 +226,10 @@ restore_file = 'best'
 r = utils.load_checkpoint(os.path.join(model_dir, restore_file + '.pth.tar'), model)
 
 
-# In[24]:
+# In[15]:
 
 
 # Evaluate
 num_steps = (params.test_size + 1) // params.batch_size
-test_metrics = evaluate(model, loss_fn, test_data_iterator, metrics, params, num_steps)
-# save_path = os.path.join(args.model_dir, "metrics_test_{}.json".format(args.restore_file))
-# utils.save_dict_to_json(test_metrics, save_path)
+test_metrics = evaluate(model, loss_fn, test_data, metrics, data_loader, params, num_steps)
+

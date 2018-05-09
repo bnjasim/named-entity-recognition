@@ -104,9 +104,9 @@ def f_score_simple(model, data_dict, data_loader, params, num_steps):
         
     p   = correct_preds / total_predict if correct_preds > 0 else 0
     r   = correct_preds / total_correct if correct_preds > 0 else 0
-    f1  = 2 * p * r / (p + r) if correct_preds > 0 else 0
+    f1  = 200 * p * r / (p + r) if correct_preds > 0 else 0
     
-    logging.info('F1 score: ' + str(f1))
+    # logging.info('F1 score: ' + str(f1))
     return f1
 
 if __name__ == '__main__':
