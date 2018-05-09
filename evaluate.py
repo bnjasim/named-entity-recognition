@@ -10,7 +10,7 @@ import model.net as net
 from model.data_loader import DataLoader
 
 
-def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
+def evaluate(model, loss_fn, data_dict, metrics, params, num_steps):
     """Evaluate the model on `num_steps` batches.
     Args:
         model: (torch.nn.Module) the neural network
@@ -26,6 +26,8 @@ def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
 
     # summary for current eval loop
     summ = []
+    
+    data_iterator = data_loader.data_iterator(data_dict, params)
 
     # compute metrics over the dataset
     for _ in range(num_steps):
@@ -41,20 +43,22 @@ def evaluate(model, loss_fn, data_iterator, metrics, params, num_steps):
         labels_batch = labels_batch.data.cpu().numpy()
 
         # compute all metrics on this batch
-        summary_batch = {metric: metrics[metric](output_batch, labels_batch)
+        summary_batch = {metric: metrics[metric](output_batch, labels_batch, params)
                          for metric in metrics}
-        summary_batch['loss'] = loss.data[0]
+        summary_batch['loss'] = loss.item()
         summ.append(summary_batch)
 
     # compute mean of all metrics in summary
     metrics_mean = {metric:np.mean([x[metric] for x in summ]) for metric in summ[0]} 
+    f1 = f_score_simple(model, data_dict, params, num_steps)
+    metrics_mean['f1'] = f1
     metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_mean.items())
     logging.info("- Eval metrics : " + metrics_string)
     return metrics_mean
 
 
 
-def f_score_simple(model, test_data_iterator, params, num_steps):
+def f_score_simple(model, data_dict, params, num_steps):
     """
     Compute the accuracy, given the outputs and labels for all tokens. Exclude PADding terms.
     Args:
@@ -64,13 +68,15 @@ def f_score_simple(model, test_data_iterator, params, num_steps):
     Returns: (float) f1 score in [0,100]
     """
     
+    data_iterator = data_loader.data_iterator(data_dict, params)
+
     correct_preds = 0
     total_correct = 0
     total_predict = 0
     
     for _ in range(num_steps):
         
-        data_batch, labels_batch = next(test_data_iterator)
+        data_batch, labels_batch = next(data_iterator)
         
         # compute model output
         output_batch = model(data_batch)
