@@ -34,14 +34,14 @@ class Net(nn.Module):
         super(Net, self).__init__()
 
         # the embedding takes as input the vocab_size and the embedding_dim
-        self.embedding = nn.Embedding(params.vocab_size, params.embedding_dim)
+        self.embedding = nn.Embedding(params.vocab_size+1, params.embedding_dim)
 
         # the LSTM takes as input the size of its input (embedding_dim), its hidden size
         # for more details on how to use it, check out the documentation
-        self.lstm = nn.LSTM(params.embedding_dim, params.lstm_hidden_dim, batch_first=True)
+        self.lstm = nn.GRU(params.embedding_dim, params.lstm_hidden_dim, batch_first=True, bidirectional=True)
 
         # the fully connected layer transforms the output to give the final output layer
-        self.fc = nn.Linear(params.lstm_hidden_dim, params.number_of_tags)
+        self.fc = nn.Linear(params.lstm_hidden_dim*2, params.number_of_tags)
         
     def forward(self, s):
         """
@@ -107,13 +107,13 @@ def loss_fn(outputs, labels):
     # number. This does not affect training, since we ignore the PADded tokens with the mask.
     labels = labels % outputs.shape[1]
 
-    num_tokens = int(torch.sum(mask).data[0])
+    num_tokens = torch.sum(mask).item()
 
     # compute cross entropy loss for all tokens (except PADding tokens), by multiplying with mask.
     return -torch.sum(outputs[range(outputs.shape[0]), labels]*mask)/num_tokens
     
     
-def accuracy(outputs, labels):
+def accuracy(outputs, labels, params):
     """
     Compute the accuracy, given the outputs and labels for all tokens. Exclude PADding terms.
 
@@ -127,7 +127,7 @@ def accuracy(outputs, labels):
 
     # reshape labels to give a flat vector of length batch_size*seq_len
     labels = labels.ravel()
-
+    # labels = labels.view(-1)
     # since PADding tokens have label -1, we can generate a mask to exclude the loss from those terms
     mask = (labels >= 0)
 
