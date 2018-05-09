@@ -24,7 +24,7 @@ class DataLoader(object):
             params: (Params) hyperparameters of the training process. This function modifies params and appends
                     dataset_params (such as vocab size, num_of_tags etc.) to params.
         """
-
+        self.data_dir = data_dir
         # loading dataset_params
         json_path = os.path.join(data_dir, 'dataset_params.json')
         assert os.path.isfile(json_path), "No json file found at {}, run build_vocab.py".format(json_path)
@@ -103,7 +103,7 @@ class DataLoader(object):
         d['labels'] = labels
         d['size'] = len(sentences)
 
-    def load_data(self, types, data_dir):
+    def load_data(self, types):
         """
         Loads the data for each type in types from data_dir.
 
@@ -119,8 +119,8 @@ class DataLoader(object):
         
         for split in ['train', 'val', 'test']:
             if split in types:
-                sentences_file = os.path.join(data_dir, split, "sentences.txt")
-                labels_file = os.path.join(data_dir, split, "labels.txt")
+                sentences_file = os.path.join(self.data_dir, split, "sentences.txt")
+                labels_file = os.path.join(self.data_dir, split, "labels.txt")
                 data[split] = {}
                 self.load_sentences_labels(sentences_file, labels_file, data[split])
 

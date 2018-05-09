@@ -7,10 +7,10 @@ import numpy as np
 import torch
 import utils
 import model.net as net
-from model.data_loader import DataLoader
+# from model.data_loader import DataLoader
 
 
-def evaluate(model, loss_fn, data_dict, metrics, params, num_steps):
+def evaluate(model, loss_fn, data_dict, metrics, data_loader, params, num_steps):
     """Evaluate the model on `num_steps` batches.
     Args:
         model: (torch.nn.Module) the neural network
@@ -50,7 +50,7 @@ def evaluate(model, loss_fn, data_dict, metrics, params, num_steps):
 
     # compute mean of all metrics in summary
     metrics_mean = {metric:np.mean([x[metric] for x in summ]) for metric in summ[0]} 
-    f1 = f_score_simple(model, data_dict, params, num_steps)
+    f1 = f_score_simple(model, data_dict, data_loader, params, num_steps)
     metrics_mean['f1'] = f1
     metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_mean.items())
     logging.info("- Eval metrics : " + metrics_string)
@@ -58,7 +58,7 @@ def evaluate(model, loss_fn, data_dict, metrics, params, num_steps):
 
 
 
-def f_score_simple(model, data_dict, params, num_steps):
+def f_score_simple(model, data_dict, data_loader, params, num_steps):
     """
     Compute the accuracy, given the outputs and labels for all tokens. Exclude PADding terms.
     Args:
@@ -133,7 +133,8 @@ if __name__ == '__main__':
     logging.info("Creating the dataset...")
 
     # load data
-    data_loader = DataLoader(data_dir, params)
+    # DataLoader() shouldn't initialized more than once, ideally
+    # data_loader = DataLoader(data_dir, params)
     data = data_loader.load_data(['test'], data_dir)
     test_data = data['test']
 
@@ -154,6 +155,6 @@ if __name__ == '__main__':
 
     num_steps = (params.test_size + 1) // params.batch_size
 
-    test_metrics = evaluate(model, loss_fn, test_data_iterator, metrics, params, num_steps)
+    test_metrics = evaluate(model, loss_fn, test_data_iterator, metrics, data_loader, params, num_steps)
     
-    f_score_simple(model, test_data_iterator, params, num_steps)
+    f_score_simple(model, test_data_iterator, data_loader, params, num_steps)
