@@ -32,6 +32,7 @@ class Net(nn.Module):
             params: (Params) contains vocab_size, embedding_dim, lstm_hidden_dim
         """
         super(Net, self).__init__()
+        self.params = params
 
         # the embedding takes as input the vocab_size and the embedding_dim
         self.embedding = nn.Embedding(params.vocab_size+1, params.embedding_dim)
