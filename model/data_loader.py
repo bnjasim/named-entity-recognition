@@ -145,7 +145,7 @@ class DataLoader(object):
         # make a list that decides the order in which we go over the data- this avoids explicit shuffling of data
         order = list(range(data['size']))
         if shuffle:
-            random.seed(230)
+            # random.seed(230)
             random.shuffle(order)
 
         # one pass over data
@@ -153,9 +153,10 @@ class DataLoader(object):
             # fetch sentences and tags
             batch_sentences = [data['data'][idx] for idx in order[i*params.batch_size:(i+1)*params.batch_size]]
             batch_tags = [data['labels'][idx] for idx in order[i*params.batch_size:(i+1)*params.batch_size]]
-
+            
             # compute length of longest sentence in batch
-            batch_max_len = max([len(s) for s in batch_sentences])
+            seql = [len(s) for s in batch_sentences]
+            batch_max_len = max(seql)
 
             # prepare a numpy array with the data, initialising the data with pad_ind and all labels with -1
             # initialising labels to -1 differentiates tokens with tags from PADding tokens
@@ -178,5 +179,5 @@ class DataLoader(object):
             # convert them to Variables to record operations in the computational graph
             batch_data, batch_labels = Variable(batch_data), Variable(batch_labels)
     
-            yield batch_data, batch_labels
+            yield batch_data, batch_labels, seql
 

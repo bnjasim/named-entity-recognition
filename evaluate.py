@@ -32,7 +32,7 @@ def evaluate(model, loss_fn, data_dict, metrics, data_loader, params, num_steps)
     # compute metrics over the dataset
     for _ in range(num_steps):
         # fetch the next evaluation batch
-        data_batch, labels_batch = next(data_iterator)
+        data_batch, labels_batch,_ = next(data_iterator)
         
         # compute model output
         output_batch = model(data_batch)
@@ -76,7 +76,7 @@ def f_score_simple(model, data_dict, data_loader, params, num_steps):
     
     for _ in range(num_steps):
         
-        data_batch, labels_batch = next(data_iterator)
+        data_batch, labels_batch,_ = next(data_iterator)
         
         # compute model output
         output_batch = model(data_batch)
