@@ -1,7 +1,6 @@
 /data/kaggle/
 /data/coNLL
 /experiments/
-*.ipynb
 .pyc
 .ipynb_checkpoints/
 .DS_Store
