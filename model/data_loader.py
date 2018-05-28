@@ -33,11 +33,13 @@ class DataLoader(object):
         # loading vocab (we require this to map words to their indices)
         vocab_path = os.path.join(data_dir, 'words.txt')
         self.vocab = {}
+        self.idx_vocab = {}
         with open(vocab_path, encoding='ISO-8859-1') as f:
             for i, l in enumerate(f.read().splitlines()):
                 l = self.unicodeToAscii(l)
                 self.vocab[l] = i
-        
+                self.idx_vocab[i] = l
+ 
         # setting the indices for UNKnown words and PADding symbols
         self.unk_ind = self.vocab[self.dataset_params.unk_word]
         self.pad_ind = self.vocab[self.dataset_params.pad_word]
@@ -45,9 +47,11 @@ class DataLoader(object):
         # loading tags (we require this to map tags to their indices)
         tags_path = os.path.join(data_dir, 'tags.txt')
         self.tag_map = {}
+        self.idx_tag = {}
         with open(tags_path) as f:
             for i, t in enumerate(f.read().splitlines()):
                 self.tag_map[t] = i
+                self.idx_tag[i] = t
 
         # adding dataset parameters to param (e.g. vocab size, )
         params.update(json_path)
