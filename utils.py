@@ -40,7 +40,6 @@ class Params():
 
 class RunningAverage():
     """A simple class that maintains the running average of a quantity
-
     Example:
     ```
     loss_avg = RunningAverage()
@@ -54,12 +53,16 @@ class RunningAverage():
         self.steps = 0
         self.total = 0
 
-    def update(self, val):
+    def update(self, val, step=1):
         self.total += val
-        self.steps += 1
+        self.steps += step
 
     def __call__(self):
-        return self.total / float(self.steps)
+        if self.steps == 0:
+            # return float('nan')
+            return 0
+        else:
+            return self.total / float(self.steps)
 
 
 def set_logger(log_path):
@@ -104,26 +107,24 @@ def save_dict_to_json(d, json_path):
         json.dump(d, f, indent=4)
 
 
-def save_checkpoint(state, is_best, checkpoint):
+def save_checkpoint(state, is_best, checkpoint, extra=''):
     """Saves model and training parameters at checkpoint + 'last.pth.tar'. If is_best==True, also saves
     checkpoint + 'best.pth.tar'
-
     Args:
         state: (dict) contains model's state_dict, may contain other keys such as epoch, optimizer state_dict
         is_best: (bool) True if it is the best model seen till now
         checkpoint: (string) folder where parameters are to be saved
     """
-    filepath = os.path.join(checkpoint, 'last.pth.tar')
+    filepath = os.path.join(checkpoint, extra + 'last.pth.tar')
     if not os.path.exists(checkpoint):
         print("Checkpoint Directory does not exist! Making directory {}".format(checkpoint))
         os.mkdir(checkpoint)
-    else:
-        print("Checkpoint Directory exists! ")
+
     torch.save(state, filepath)
     if is_best:
-        shutil.copyfile(filepath, os.path.join(checkpoint, 'best.pth.tar'))
+        shutil.copyfile(filepath, os.path.join(checkpoint, extra + 'best.pth.tar'))
 
-
+        
 def load_checkpoint(checkpoint, model, optimizer=None):
     """Loads model parameters (state_dict) from file_path. If optimizer is provided, loads state_dict of
     optimizer assuming it is present in checkpoint.
