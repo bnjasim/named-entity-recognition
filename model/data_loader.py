@@ -33,12 +33,21 @@ class DataLoader(object):
         # loading vocab (we require this to map words to their indices)
         vocab_path = os.path.join(data_dir, 'words.txt')
         self.vocab = {}
+        self.vocab_lower = {} # only keep lower case words
         self.idx_vocab = {}
+        self.idx_vocab_lower = {}
         with open(vocab_path, encoding='ISO-8859-1') as f:
+            c = 0
             for i, l in enumerate(f.read().splitlines()):
                 l = self.unicodeToAscii(l)
                 self.vocab[l] = i
                 self.idx_vocab[i] = l
+                
+                w = l.lower()
+                if not self.vocab_lower.get(w):
+                    self.vocab_lower[w] = c
+                    self.idx_vocab_lower[c] = w
+                    c += 1   
  
         # setting the indices for UNKnown words and PADding symbols
         self.unk_ind = self.vocab[self.dataset_params.unk_word]
@@ -63,7 +72,7 @@ class DataLoader(object):
                     s = line.strip().split(' ')
                     word = s[0]
                     # glove_vocab.add(word)
-                    if self.vocab.get(word):
+                    if self.vocab_lower.get(word):
                         emb = [float(j) for j in s[1:]]
                         glove_dict[word] = emb
         
@@ -72,6 +81,7 @@ class DataLoader(object):
         # If word not present in glove, then initialize randomly
         with open(vocab_path) as f:
             for i, word in enumerate(f.read().splitlines()):
+                word = word.lower()
                 if glove_dict.get(word):
                     self.embedding[i] = glove_dict[word]
                 else:
