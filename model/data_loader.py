@@ -14,7 +14,7 @@ class DataLoader(object):
     """
     Handles all aspects of the data. Stores the dataset_params, vocabulary and tags with their mappings to indices.
     """
-    def __init__(self, data_dir, params):
+    def __init__(self, data_dir, params, path_glove=''):
         """
         Loads dataset_params, vocabulary and tags. Ensure you have run `build_vocab.py` on data_dir before using this
         class.
@@ -52,6 +52,32 @@ class DataLoader(object):
             for i, t in enumerate(f.read().splitlines()):
                 self.tag_map[t] = i
                 self.idx_tag[i] = t
+
+        # Glove embeddings
+        glove_dict = {}
+
+        if params.use_glove and path_glove:
+            # glove_vocab = set()
+            with open(path_glove) as f:
+                for line in f:
+                    s = line.strip().split(' ')
+                    word = s[0]
+                    # glove_vocab.add(word)
+                    if self.vocab.get(word):
+                        emb = [float(j) for j in s[1:]]
+                        glove_dict[word] = emb
+        
+        self.embedding = np.zeros((len(self.vocab), params.embedding_dim))
+        # Embedding Initialization
+        # If word not present in glove, then initialize randomly
+        with open(vocab_path) as f:
+            for i, word in enumerate(f.read().splitlines()):
+                if glove_dict.get(word):
+                    self.embedding[i] = glove_dict[word]
+                else:
+                    self.embedding[i] = np.random.randn(params.embedding_dim)
+
+        
 
         # adding dataset parameters to param (e.g. vocab size, )
         params.update(json_path)
