@@ -36,10 +36,10 @@ class DataLoader(object):
         self.vocab_lower = {} # only keep lower case words
         self.idx_vocab = {}
         self.idx_vocab_lower = {}
-        with open(vocab_path, encoding='ISO-8859-1') as f:
+        with open(vocab_path) as f:
             c = 0
             for i, l in enumerate(f.read().splitlines()):
-                l = self.unicodeToAscii(l)
+                # l = self.unicodeToAscii(l)
                 self.vocab[l] = i
                 self.idx_vocab[i] = l
                 
@@ -91,6 +91,8 @@ class DataLoader(object):
 
         # adding dataset parameters to param (e.g. vocab size, )
         params.update(json_path)
+
+        assert params.vocab_size == len(self.vocab), 'Vocabulary sizes from build_vocab and in Data loader should match'
 
     @staticmethod
     def unicodeToAscii(s):
