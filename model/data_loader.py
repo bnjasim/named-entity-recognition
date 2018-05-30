@@ -2,7 +2,6 @@ import random
 import numpy as np
 import os
 import sys
-import unicodedata
 
 import torch
 from torch.autograd import Variable
@@ -44,7 +43,7 @@ class DataLoader(object):
                 self.idx_vocab[i] = l
                 
                 w = l.lower()
-                if not self.vocab_lower.get(w):
+                if w not in self.vocab_lower:
                     self.vocab_lower[w] = c
                     self.idx_vocab_lower[c] = w
                     c += 1   
@@ -72,7 +71,7 @@ class DataLoader(object):
                     s = line.strip().split(' ')
                     word = s[0]
                     # glove_vocab.add(word)
-                    if self.vocab_lower.get(word):
+                    if word in self.vocab_lower:
                         emb = [float(j) for j in s[1:]]
                         glove_dict[word] = emb
         
@@ -94,14 +93,6 @@ class DataLoader(object):
 
         assert params.vocab_size == len(self.vocab), 'Vocabulary sizes from build_vocab and in Data loader should match'
 
-    @staticmethod
-    def unicodeToAscii(s):
-        return ''.join(
-            c for c in unicodedata.normalize('NFD', s)
-            if unicodedata.category(c) != 'Mn'
-        )
-
-
     def load_sentences_labels(self, sentences_file, labels_file, d):
         """
         Loads sentences and labels from their corresponding files. Maps tokens and tags to their indices and stores
@@ -122,10 +113,10 @@ class DataLoader(object):
                 # else use index of UNK_WORD
                 sentence = sentence.strip()
                 if sentence:
-                    sent_uni = [self.unicodeToAscii(token) for token in sentence.split(' ')]
+                    # sent_uni = [self.unicodeToAscii(token) for token in sentence.split(' ')]
                     s = [self.vocab[token] if token in self.vocab 
                          else self.unk_ind
-                         for token in sent_uni]
+                         for token in sentence.split(' ')]
                     sentences.append(s)
         
         with open(labels_file) as f:

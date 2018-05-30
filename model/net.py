@@ -35,7 +35,7 @@ class Net(nn.Module):
         self.params = params
 
         # the embedding takes as input the vocab_size and the embedding_dim
-        self.embedding = nn.Embedding(params.vocab_size+1, params.embedding_dim)
+        self.embedding = nn.Embedding(params.vocab_size, params.embedding_dim)
 
         # the LSTM takes as input the size of its input (embedding_dim), its hidden size
         # for more details on how to use it, check out the documentation

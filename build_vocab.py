@@ -4,7 +4,6 @@ import argparse
 from collections import Counter
 import json
 import os
-import unicodedata
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--min_count_word', default=1, help="Minimum count for words in the dataset", type=int)
@@ -40,12 +39,8 @@ def save_dict_to_json(d, json_path):
         d = {k: v for k, v in d.items()}
         json.dump(d, f, indent=4)
 
-def unicodeToAscii(s):
-    return ''.join(
-        c for c in unicodedata.normalize('NFD', s)
-        if unicodedata.category(c) != 'Mn'
-    )
-
+def is_ascii(s):
+    return all(ord(c) < 128 for c in s)
 
 def update_vocab(txt_path, vocab):
     """Update word and tag vocabulary from dataset
@@ -59,10 +54,9 @@ def update_vocab(txt_path, vocab):
     """
     with open(txt_path, encoding='ISO-8859-1') as f:
         for i, line in enumerate(f):
-            vocab.update([unicodeToAscii(w) for w in  line.strip().split(' ')])
+            vocab.update([w for w in  line.strip().split(' ') if is_ascii(w)])
 
     return i + 1
-
 
 if __name__ == '__main__':
     args = parser.parse_args()
