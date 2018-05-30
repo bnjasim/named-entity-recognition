@@ -19,7 +19,7 @@ class Net(nn.Module):
     The documentation for all the various components available to you is here: http://pytorch.org/docs/master/nn.html
     """
 
-    def __init__(self, params):
+    def __init__(self, params, embedding):
         """
         We define an recurrent network that predicts the NER tags for each token in the sentence. The components
         required are:
@@ -36,7 +36,9 @@ class Net(nn.Module):
 
         # the embedding takes as input the vocab_size and the embedding_dim
         self.embedding = nn.Embedding(params.vocab_size, params.embedding_dim)
-
+        # copy pretrained embedding
+        self.embedding.weight.data.copy_(torch.from_numpy(embedding))
+        self.dropout = nn.Dropout(0.1)
         # the LSTM takes as input the size of its input (embedding_dim), its hidden size
         # for more details on how to use it, check out the documentation
         self.lstm = nn.GRU(params.embedding_dim, params.lstm_hidden_dim, batch_first=True, bidirectional=True)
@@ -66,7 +68,7 @@ class Net(nn.Module):
 
         # run the LSTM along the sentences of length seq_len
         s, _ = self.lstm(s)              # dim: batch_size x seq_len x lstm_hidden_dim
-
+        s = self.dropout(s)
         # make the Variable contiguous in memory (a PyTorch artefact)
         s = s.contiguous()
 
