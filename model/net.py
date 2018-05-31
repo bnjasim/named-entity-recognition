@@ -38,7 +38,7 @@ class Net(nn.Module):
         self.embedding = nn.Embedding(params.vocab_size, params.embedding_dim)
         # copy pretrained embedding
         self.embedding.weight.data.copy_(torch.from_numpy(embedding))
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(params.dropout)
         # the LSTM takes as input the size of its input (embedding_dim), its hidden size
         # for more details on how to use it, check out the documentation
         self.lstm = nn.GRU(params.embedding_dim, params.lstm_hidden_dim, batch_first=True, bidirectional=True)
